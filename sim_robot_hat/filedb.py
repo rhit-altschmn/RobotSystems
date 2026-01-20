@@ -86,6 +86,8 @@ class fileDB(object):
 		:return: the value of the arguement
 		:rtype: str
 		"""
+		return default_value
+
 		try:
 			conf = open(self.db,'r')
 			lines=conf.readlines()
@@ -119,7 +121,9 @@ class fileDB(object):
 		:param value: the value of the arguement
 		:type value: str
 		"""
-		# Read the file
+		pass
+	
+		'''# Read the file
 		conf = open(self.db,'r')
 		lines=conf.readlines()
 		conf.close()
@@ -138,7 +142,7 @@ class fileDB(object):
 		# Save the file
 		conf = open(self.db,'w')
 		conf.writelines(lines)
-		conf.close()
+		conf.close()'''
 
 if __name__ == '__main__':
     db = fileDB('/opt/robot-hat/test2.config')

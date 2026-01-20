@@ -1,4 +1,6 @@
 # !!! MAKE SURE YOU ARE cd picarx before running !!!
+import logging
+from logdecorator import log_on_start, log_on_end, log_on_error
 
 import os
 try:
@@ -13,6 +15,11 @@ except ImportError:
     from sim_robot_hat import Grayscale_Module, Ultrasonic, utils
     on_the_robot = False
 import time
+import atexit
+
+logging_format = "%(asctime)s: %(message)s"
+logging.basicConfig(format=logging_format, level=logging.INFO,datefmt="%H:%M:%S")
+
 
 
 def constrain(x, min_val, max_val):
@@ -43,6 +50,9 @@ class Picarx(object):
     # grayscale_pins: 3 adc channels
     # ultrasonic_pins: trig, echo2
     # config: path of config file
+    @log_on_start(logging.DEBUG, "Message when function starts")
+    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
+    @log_on_end(logging.DEBUG, "Message when function ends successfully")
     def __init__(self, 
                 servo_pins:list=['P0', 'P1', 'P2'], 
                 motor_pins:list=['D4', 'D5', 'P13', 'P12'],
@@ -58,6 +68,8 @@ class Picarx(object):
         # --------- config_flie ---------
         if on_the_robot:
             self.config_flie = fileDB(config, 777, os.getlogin())
+        else:
+            self.config_flie = fileDB(config, 777,owner=None) 
 
         # --------- servos init ---------
         self.cam_pan = Servo(servo_pins[0])
@@ -103,7 +115,11 @@ class Picarx(object):
         # --------- ultrasonic init ---------
         trig, echo= ultrasonic_pins
         self.ultrasonic = Ultrasonic(Pin(trig), Pin(echo, mode=Pin.IN, pull=Pin.PULL_DOWN))
-        
+    
+    
+    @log_on_start(logging.DEBUG, "Message when function starts")
+    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
+    @log_on_end(logging.DEBUG, "Message when function ends successfully")    
     def set_motor_speed(self, motor, speed):
         ''' set motor speed
         
@@ -159,6 +175,9 @@ class Picarx(object):
         self.config_flie.set("picarx_dir_servo", "%s"%value)
         self.dir_servo_pin.angle(value)
 
+    @log_on_start(logging.DEBUG, "Message when function starts")
+    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
+    @log_on_end(logging.DEBUG, "Message when function ends successfully")
     def set_dir_servo_angle(self, value):
         self.dir_current_angle = constrain(value, self.DIR_MIN, self.DIR_MAX)
         angle_value  = self.dir_current_angle + self.dir_cali_val
@@ -174,14 +193,23 @@ class Picarx(object):
         self.config_flie.set("picarx_cam_tilt_servo", "%s"%value)
         self.cam_tilt.angle(value)
 
+    @log_on_start(logging.DEBUG, "Message when function starts")
+    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
+    @log_on_end(logging.DEBUG, "Message when function ends successfully")
     def set_cam_pan_angle(self, value):
         value = constrain(value, self.CAM_PAN_MIN, self.CAM_PAN_MAX)
         self.cam_pan.angle(-1*(value + -1*self.cam_pan_cali_val))
 
+    @log_on_start(logging.DEBUG, "Message when function starts")
+    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
+    @log_on_end(logging.DEBUG, "Message when function ends successfully")
     def set_cam_tilt_angle(self,value):
         value = constrain(value, self.CAM_TILT_MIN, self.CAM_TILT_MAX)
         self.cam_tilt.angle(-1*(value + -1*self.cam_tilt_cali_val))
 
+    @log_on_start(logging.DEBUG, "Message when function starts")
+    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
+    @log_on_end(logging.DEBUG, "Message when function ends successfully")
     def set_power(self, speed):
         self.set_motor_speed(1, speed)
         self.set_motor_speed(2, speed)
@@ -220,6 +248,9 @@ class Picarx(object):
             self.set_motor_speed(1, speed)
             self.set_motor_speed(2, -1*speed)                  
 
+    @log_on_start(logging.DEBUG, "Message when function starts")
+    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
+    @log_on_end(logging.DEBUG, "Message when function ends successfully")
     def stop(self):
         '''
         Execute twice to make sure it stops
@@ -229,6 +260,9 @@ class Picarx(object):
             self.motor_speed_pins[1].pulse_width_percent(0)
             time.sleep(0.002)
 
+    @log_on_start(logging.DEBUG, "Message when function starts")
+    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
+    @log_on_end(logging.DEBUG, "Message when function ends successfully")
     def get_distance(self):
         return self.ultrasonic.read()
 
@@ -262,12 +296,16 @@ class Picarx(object):
         else:
             raise ValueError("grayscale reference must be a 1*3 list")
 
+    @log_on_start(logging.DEBUG, "Message when function starts")
+    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
+    @log_on_end(logging.DEBUG, "Message when function ends successfully")
     def reset(self):
         self.stop()
         self.set_dir_servo_angle(0)
         self.set_cam_tilt_angle(0)
         self.set_cam_pan_angle(0)
 
+    @atexit.register
     def close(self):
         self.reset()
         self.ultrasonic.close()
