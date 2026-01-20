@@ -2,7 +2,7 @@
 from .basic import _Basic_class
 import time
 import threading
-import pyaudio
+# import pyaudio
 import os
 import struct
 import math
@@ -11,7 +11,7 @@ from .utils import enable_speaker, disable_speaker
 class Music(_Basic_class):
     """Play music, sound affect and note control"""
 
-    FORMAT = pyaudio.paInt16
+    # FORMAT = pyaudio.paInt16
     CHANNELS = 1
     RATE = 44100
 
@@ -64,11 +64,11 @@ class Music(_Basic_class):
         warnings.filterwarnings("ignore")
         # close welcome message of pygame, and the value must be <str> 
         os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "1" 
-        import pygame
+        # import pygame
         warnings.filters = warnings_bk
         """Initialize music"""
-        self.pygame = pygame
-        self.pygame.mixer.init()
+        # self.pygame = pygame
+        # self.pygame.mixer.init()
         self.time_signature(4, 4)
         self.tempo(120, 1/4)
         self.key_signature(0)

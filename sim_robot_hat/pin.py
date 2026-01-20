@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from .basic import _Basic_class
-import gpiozero  # https://gpiozero.readthedocs.io/en/latest/installing.html
-from gpiozero import OutputDevice, InputDevice, Button
+# import gpiozero  # https://gpiozero.readthedocs.io/en/latest/installing.html
+# from gpiozero import OutputDevice, InputDevice, Button
 
 
 class Pin(_Basic_class):
@@ -92,16 +92,18 @@ class Pin(_Basic_class):
 
         # setup
         self._value = 0
-        self.gpio = None
+        # self.gpio = None
         self.setup(mode, pull, active_state)
         self._info("Pin init finished.")
 
     def close(self):
-        self.gpio.close()
+        return
+        # self.gpio.close()
 
     def deinit(self):
-        self.gpio.close()
-        self.gpio.pin_factory.close()
+        return
+        # self.gpio.close()
+        # self.gpio.pin_factory.close()
 
     def setup(self, mode, pull=None, active_state=None):
         """
@@ -126,10 +128,13 @@ class Pin(_Basic_class):
                 f'pull param error, should be None, Pin.PULL_NONE, Pin.PULL_DOWN, Pin.PULL_UP'
             )
         #
+        return
         if self.gpio != None:
             if self.gpio.pin != None:
                 self.gpio.close()
         #
+
+        
         if mode in [None, self.OUT]:
             self.gpio = OutputDevice(self._pin_num)
         else:
@@ -189,10 +194,10 @@ class Pin(_Basic_class):
                 self.setup(self.OUT)
             if bool(value):
                 value = 1
-                self.gpio.on()
+                # self.gpio.on()
             else:
                 value = 0
-                self.gpio.off()
+                # self.gpio.off()
             return value
 
     def on(self):
@@ -291,9 +296,11 @@ class Pin(_Basic_class):
             released_handler = handler
         #
         if pressed_handler is not None:
-            self.gpio.when_pressed = pressed_handler
+            print(f"{pressed_handler} is set")
+        # self.gpio.when_pressed = pressed_handler
         if released_handler is not None:
-            self.gpio.when_released = released_handler
+            print(f"{released_handler} is set")
+            # self.gpio.when_released = released_handler
 
     def name(self):
         """

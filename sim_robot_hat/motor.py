@@ -135,7 +135,7 @@ class Motors(_Basic_class):
         """
         super().__init__(*args, **kwargs)
 
-        self.db = fileDB(db=db, mode='774', owner=User)
+        self.db = fileDB(db=db, mode='774', owner=None)
         self.left_id = int(self.db.get("left", default_value=0))
         self.right_id = int(self.db.get("right", default_value=0))
         left_reversed = bool(self.db.get(

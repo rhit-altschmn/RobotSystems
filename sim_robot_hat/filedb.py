@@ -32,11 +32,11 @@ class fileDB(object):
 		'''
 
 		self.db = db
-		# Check if db_file is existed, otherwise create one
-		if self.db != None:	
-			self.file_check_create(db, mode, owner)
-		else:
-			raise ValueError('db: Missing file path parameter.')
+		# Not for sim robot! - Check if db_file is existed, otherwise create one
+		# if self.db != None:	
+		# 	self.file_check_create(db, mode, owner)
+		# else:
+		# 	raise ValueError('db: Missing file path parameter.')
 
 
 	def file_check_create(self, file_path:str, mode:str=None, owner:str=None):
