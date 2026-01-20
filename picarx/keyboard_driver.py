@@ -1,4 +1,4 @@
-from picarx import Picarx
+from picarx_improved import Picarx
 from time import sleep
 import readchar
 
@@ -60,7 +60,9 @@ if __name__ == "__main__":
                 elif 'j' == key:
                     pan_angle-=5
                     if pan_angle<-30:
-                        pan_angle=-30                 
+                        pan_angle=-30       
+
+                          
 
                 px.set_cam_tilt_angle(tilt_angle)
                 px.set_cam_pan_angle(pan_angle)      

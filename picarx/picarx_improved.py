@@ -16,10 +16,11 @@ except ImportError:
     on_the_robot = False
 import time
 import atexit
+import math
 
-logging_format = "%(asctime)s: %(message)s"
+logging_format = "%(asctime)s: PicarX: %(message)s"
 logging.basicConfig(format=logging_format, level=logging.INFO,datefmt="%H:%M:%S")
-
+logging.getLogger().setLevel(logging.DEBUG)
 
 
 def constrain(x, min_val, max_val):
@@ -50,9 +51,9 @@ class Picarx(object):
     # grayscale_pins: 3 adc channels
     # ultrasonic_pins: trig, echo2
     # config: path of config file
-    @log_on_start(logging.DEBUG, "Message when function starts")
-    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
-    @log_on_end(logging.DEBUG, "Message when function ends successfully")
+    @log_on_start(logging.DEBUG, "Starting Picarx Init")
+    @log_on_error(logging.DEBUG, "Error init: {e!r}")
+    @log_on_end(logging.DEBUG, "Finished picarx init")
     def __init__(self, 
                 servo_pins:list=['P0', 'P1', 'P2'], 
                 motor_pins:list=['D4', 'D5', 'P13', 'P12'],
@@ -117,9 +118,9 @@ class Picarx(object):
         self.ultrasonic = Ultrasonic(Pin(trig), Pin(echo, mode=Pin.IN, pull=Pin.PULL_DOWN))
     
     
-    @log_on_start(logging.DEBUG, "Message when function starts")
-    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
-    @log_on_end(logging.DEBUG, "Message when function ends successfully")    
+    @log_on_start(logging.DEBUG, "Set Motor Speed: {motor:d} ")
+    @log_on_error(logging.DEBUG, "Error Motor speed: {e!r}")
+    # @log_on_end(logging.DEBUG, "Message when function ends successfully")    
     def set_motor_speed(self, motor, speed):
         ''' set motor speed
         
@@ -175,9 +176,8 @@ class Picarx(object):
         self.config_flie.set("picarx_dir_servo", "%s"%value)
         self.dir_servo_pin.angle(value)
 
-    @log_on_start(logging.DEBUG, "Message when function starts")
-    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
-    @log_on_end(logging.DEBUG, "Message when function ends successfully")
+    @log_on_start(logging.DEBUG, "Set Drive Servo angle: {value:d} ")
+    @log_on_error(logging.DEBUG, "Error set servo angle: {e!r}")
     def set_dir_servo_angle(self, value):
         self.dir_current_angle = constrain(value, self.DIR_MIN, self.DIR_MAX)
         angle_value  = self.dir_current_angle + self.dir_cali_val
@@ -193,34 +193,56 @@ class Picarx(object):
         self.config_flie.set("picarx_cam_tilt_servo", "%s"%value)
         self.cam_tilt.angle(value)
 
-    @log_on_start(logging.DEBUG, "Message when function starts")
-    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
-    @log_on_end(logging.DEBUG, "Message when function ends successfully")
+    @log_on_start(logging.DEBUG, "Set Cam Pan angle: {value:d} ")
+    @log_on_error(logging.DEBUG, "Error set servo angle: {e!r}")
     def set_cam_pan_angle(self, value):
         value = constrain(value, self.CAM_PAN_MIN, self.CAM_PAN_MAX)
         self.cam_pan.angle(-1*(value + -1*self.cam_pan_cali_val))
 
-    @log_on_start(logging.DEBUG, "Message when function starts")
-    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
-    @log_on_end(logging.DEBUG, "Message when function ends successfully")
+    @log_on_start(logging.DEBUG, "Set Cam tilt angle: {value:d} ")
+    @log_on_error(logging.DEBUG, "Error set servo angle: {e!r}")
     def set_cam_tilt_angle(self,value):
         value = constrain(value, self.CAM_TILT_MIN, self.CAM_TILT_MAX)
         self.cam_tilt.angle(-1*(value + -1*self.cam_tilt_cali_val))
 
-    @log_on_start(logging.DEBUG, "Message when function starts")
-    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
-    @log_on_end(logging.DEBUG, "Message when function ends successfully")
     def set_power(self, speed):
         self.set_motor_speed(1, speed)
         self.set_motor_speed(2, speed)
 
+    
+    @log_on_start(logging.DEBUG, "Ackerman angle: {angle:d} ")
+    @log_on_error(logging.DEBUG, "Error ackerman: {e!r}")
+    @log_on_end(logging.DEBUG, "Speed scale calculated: {result!r}")
+    def ackerman(self, angle):
+        #wheelbase: 94.24 #mm
+        #trackwidth: 117.1 #mm
+
+        l = 94.24/1000
+        w = 117.1/1000
+
+        phi = math.radians(angle)
+
+        if phi == 0:
+            return 1.0
+        else:
+            r_in = (l/math.tan(phi)) - w/2
+            r_out = (l/math.tan(phi)) + w/2
+
+            scale = r_out/r_in
+
+        return (0.0, max(scale))
+
+
+    @log_on_start(logging.DEBUG, "Drive Backward speed: {speed:d} ")
+    @log_on_error(logging.DEBUG, "Error drive backward: {e!r}")
     def backward(self, speed):
         current_angle = self.dir_current_angle
         if current_angle != 0:
             abs_current_angle = abs(current_angle)
             if abs_current_angle > self.DIR_MAX:
                 abs_current_angle = self.DIR_MAX
-            power_scale = (100 - abs_current_angle) / 100.0 
+            
+            power_scale = self.ackerman(current_angle)
             if (current_angle / abs_current_angle) > 0:
                 self.set_motor_speed(1, -1*speed)
                 self.set_motor_speed(2, speed * power_scale)
@@ -230,14 +252,17 @@ class Picarx(object):
         else:
             self.set_motor_speed(1, -1*speed)
             self.set_motor_speed(2, speed)  
-
+   
+    @log_on_start(logging.DEBUG, "Drive Forward speed: {speed:d} ")
+    @log_on_error(logging.DEBUG, "Error drive forward: {e!r}")
     def forward(self, speed):
         current_angle = self.dir_current_angle
         if current_angle != 0:
             abs_current_angle = abs(current_angle)
             if abs_current_angle > self.DIR_MAX:
                 abs_current_angle = self.DIR_MAX
-            power_scale = (100 - abs_current_angle) / 100.0
+            
+            power_scale = self.ackerman(current_angle)
             if (current_angle / abs_current_angle) > 0:
                 self.set_motor_speed(1, 1*speed * power_scale)
                 self.set_motor_speed(2, -speed) 
@@ -246,11 +271,27 @@ class Picarx(object):
                 self.set_motor_speed(2, -1*speed * power_scale)
         else:
             self.set_motor_speed(1, speed)
-            self.set_motor_speed(2, -1*speed)                  
+            self.set_motor_speed(2, -1*speed)     
 
-    @log_on_start(logging.DEBUG, "Message when function starts")
-    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
-    @log_on_end(logging.DEBUG, "Message when function ends successfully")
+
+    @log_on_start(logging.DEBUG,"K Turn left")
+    @log_on_error(logging.DEBUG, "Error K turn left: {e!r}")
+    def k_turn_left(self):
+        self.set_dir_servo_angle(45)
+        self.forward(75)
+        self.sleep(2)
+        self.stop()
+        self.set_dir_servo_angle(-45)
+        self.backward(75)
+        self.sleep(2)
+        self.stop()
+
+
+
+
+        
+    @log_on_start(logging.DEBUG, "Stop Robot")
+    @log_on_error(logging.DEBUG, "Error stop robot: {e!r}")
     def stop(self):
         '''
         Execute twice to make sure it stops
@@ -260,9 +301,6 @@ class Picarx(object):
             self.motor_speed_pins[1].pulse_width_percent(0)
             time.sleep(0.002)
 
-    @log_on_start(logging.DEBUG, "Message when function starts")
-    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
-    @log_on_end(logging.DEBUG, "Message when function ends successfully")
     def get_distance(self):
         return self.ultrasonic.read()
 
@@ -296,9 +334,8 @@ class Picarx(object):
         else:
             raise ValueError("grayscale reference must be a 1*3 list")
 
-    @log_on_start(logging.DEBUG, "Message when function starts")
-    @log_on_error(logging.DEBUG, "Message when function encounters an error before completing")
-    @log_on_end(logging.DEBUG, "Message when function ends successfully")
+    @log_on_start(logging.DEBUG, "Reset Robot")
+    @log_on_error(logging.DEBUG, "Error reset: {e!r}")
     def reset(self):
         self.stop()
         self.set_dir_servo_angle(0)
