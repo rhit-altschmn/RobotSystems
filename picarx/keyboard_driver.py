@@ -2,6 +2,8 @@ from picarx_improved import Picarx
 from time import sleep
 import readchar
 
+# !!! MAKE SURE YOU ARE cd picarx before running !!!
+
 manual = '''
 Press keys on keyboard to control PiCar-X!
     w: Forward

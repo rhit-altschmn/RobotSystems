@@ -118,7 +118,7 @@ class Picarx(object):
         self.ultrasonic = Ultrasonic(Pin(trig), Pin(echo, mode=Pin.IN, pull=Pin.PULL_DOWN))
     
     
-    @log_on_start(logging.DEBUG, "Set Motor Speed: {motor:d} ")
+    @log_on_start(logging.DEBUG, "Set Motor : {motor:d} Speed : {speed:f} ")
     @log_on_error(logging.DEBUG, "Error Motor speed: {e!r}")
     # @log_on_end(logging.DEBUG, "Message when function ends successfully")    
     def set_motor_speed(self, motor, speed):
@@ -210,7 +210,7 @@ class Picarx(object):
         self.set_motor_speed(2, speed)
 
     
-    @log_on_start(logging.DEBUG, "Ackerman angle: {angle:d} ")
+    @log_on_start(logging.DEBUG, "Ackerman angle: {angle:f} ")
     @log_on_error(logging.DEBUG, "Error ackerman: {e!r}")
     @log_on_end(logging.DEBUG, "Speed scale calculated: {result!r}")
     def ackerman(self, angle):
@@ -222,18 +222,22 @@ class Picarx(object):
 
         phi = math.radians(angle)
 
+        # abs(phi)
+
         if phi == 0:
             return 1.0
-        else:
+        elif phi < 0:
             r_in = (l/math.tan(phi)) - w/2
             r_out = (l/math.tan(phi)) + w/2
+        else: 
+            r_in = (l/math.tan(phi)) + w/2
+            r_out = (l/math.tan(phi)) - w/2
 
-            scale = r_out/r_in
+        scale = r_out/r_in
+        
+        return scale
 
-        return (0.0, max(scale))
-
-
-    @log_on_start(logging.DEBUG, "Drive Backward speed: {speed:d} ")
+    @log_on_start(logging.DEBUG, "Drive Backward speed: {speed:f} ")
     @log_on_error(logging.DEBUG, "Error drive backward: {e!r}")
     def backward(self, speed):
         current_angle = self.dir_current_angle
@@ -243,7 +247,8 @@ class Picarx(object):
                 abs_current_angle = self.DIR_MAX
             
             power_scale = self.ackerman(current_angle)
-            if (current_angle / abs_current_angle) > 0:
+            print(f"\nAckerman check: scale:{power_scale} speed:{speed}\n")
+            if (current_angle / abs_current_angle) < 0:
                 self.set_motor_speed(1, -1*speed)
                 self.set_motor_speed(2, speed * power_scale)
             else:
@@ -253,7 +258,7 @@ class Picarx(object):
             self.set_motor_speed(1, -1*speed)
             self.set_motor_speed(2, speed)  
    
-    @log_on_start(logging.DEBUG, "Drive Forward speed: {speed:d} ")
+    @log_on_start(logging.DEBUG, "Drive Forward speed: {speed:f} ")
     @log_on_error(logging.DEBUG, "Error drive forward: {e!r}")
     def forward(self, speed):
         current_angle = self.dir_current_angle
@@ -263,7 +268,8 @@ class Picarx(object):
                 abs_current_angle = self.DIR_MAX
             
             power_scale = self.ackerman(current_angle)
-            if (current_angle / abs_current_angle) > 0:
+            print(f"\nAckerman check: scale:{power_scale} speed:{speed}\n")
+            if (current_angle / abs_current_angle) < 0:
                 self.set_motor_speed(1, 1*speed * power_scale)
                 self.set_motor_speed(2, -speed) 
             else:
@@ -349,6 +355,16 @@ class Picarx(object):
 
 if __name__ == "__main__":
     px = Picarx()
-    px.forward(50)
+    px.set_dir_servo_angle(30)
+    px.forward(25)
+    time.sleep(1)
+    px.set_dir_servo_angle(-30)
+    px.forward(25)
+    time.sleep(2)
+    px.set_dir_servo_angle(30)
+    px.backward(25)
+    time.sleep(1)
+    px.set_dir_servo_angle(-30)
+    px.backward(25)
     time.sleep(1)
     px.stop()
