@@ -70,7 +70,7 @@ if __name__ == "__main__":
                 px.set_cam_pan_angle(pan_angle)      
                 show_info()                     
                 sleep(0.5)
-                px.forward(0)
+                # px.forward(0)
           
             elif key == readchar.key.CTRL_C:
                 print("\n Quit")
