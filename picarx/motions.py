@@ -3,6 +3,7 @@ from time import sleep
 import logging
 from logdecorator import log_on_start, log_on_end, log_on_error
 
+# !!! MAKE SURE YOU ARE cd picarx before running !!!
 
 try:
     import readchar
@@ -95,7 +96,7 @@ class Moves():
         
     @log_on_start(logging.DEBUG, "Head left")
     @log_on_error(logging.DEBUG, "Error: {e!r}")
-    def head_left(self):
+    def head_right(self):
         self.pan_angle+=5
         if self.pan_angle>30:
             self.pan_angle=30
@@ -103,7 +104,7 @@ class Moves():
     
     @log_on_start(logging.DEBUG, "Head Right")
     @log_on_error(logging.DEBUG, "Error: {e!r}")
-    def head_right(self):
+    def head_left(self):
         self.pan_angle-=5
         if self.pan_angle<-30:
             self.pan_angle=-30  
