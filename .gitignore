@@ -3,5 +3,4 @@ build/*
 bk/
 *secret*
 
-__pycache__
-picarx/__pycache__
+__pycache__/
