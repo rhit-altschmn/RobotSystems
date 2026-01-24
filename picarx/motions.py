@@ -13,14 +13,12 @@ except:
 
 manual = '''
 \n\nPress keys on keyboard to control PiCar-X!
-    w: Forward
-    a: Turn left
-    s: Backward
-    d: Turn right
-    i: Head up
-    k: Head down
-    j: Turn head left
-    l: Turn head right
+    Main drive : wasd
+    Fine Steering : zxc
+    3pt turns : ry
+
+    Head Tilt: ijkl
+
     ctrl+c: Press twice to exit the program
 '''
 
@@ -43,11 +41,12 @@ class Moves():
         self.speed = 80
 
         self.runtime = 0.5
+        self.pause = 0.2
 
+    ### ----------- Main Drive Controls ------------
     @log_on_start(logging.DEBUG, "Go forward")
     @log_on_error(logging.DEBUG, "Error: {e!r}")
     def forward(self):
-        self.px.set_dir_servo_angle(0)
         self.px.forward(self.speed)
         sleep(self.runtime)
         self.px.stop()
@@ -55,7 +54,6 @@ class Moves():
     @log_on_start(logging.DEBUG, "Go Backward")
     @log_on_error(logging.DEBUG, "Error: {e!r}")
     def reverse (self):
-        self.px.set_dir_servo_angle(0)
         self.px.backward(self.speed)
         sleep(self.runtime)
         self.px.stop()
@@ -63,7 +61,8 @@ class Moves():
     @log_on_start(logging.DEBUG, "Turn left go forward")
     @log_on_error(logging.DEBUG, "Error: {e!r}")
     def front_left(self):
-        self.px.set_dir_servo_angle(-30)
+        self.drive_angle = -30
+        self.px.set_dir_servo_angle(self.drive_angle)
         self.px.forward(self.speed)
         sleep(self.runtime)
         self.px.stop()
@@ -71,13 +70,91 @@ class Moves():
     @log_on_start(logging.DEBUG, "Turn right go forward")
     @log_on_error(logging.DEBUG, "Error: {e!r}")
     def front_right(self):
-        self.px.set_dir_servo_angle(30)
+        self.drive_angle = 30
+        self.px.set_dir_servo_angle(self.drive_angle)
         self.px.forward(self.speed)
         sleep(self.runtime)
         self.px.stop()
+    
+    @log_on_start(logging.DEBUG, "Recenter drive")
+    @log_on_error(logging.DEBUG, "Error: {e!r}")
+    def recenter_steering(self):
+        self.drive_angle = 0
+        self.px.set_dir_servo_angle(self.drive_angle)
+   
+    @log_on_start(logging.DEBUG, "Turn right")
+    @log_on_error(logging.DEBUG, "Error: {e!r}")
+    def turn_right(self):
+        self.drive_angle+=5
+        if self.drive_angle>30:
+            self.drive_angle=30
+        self.px.set_dir_servo_angle(self.drive_angle) 
+    
+    @log_on_start(logging.DEBUG, "Turn left")
+    @log_on_error(logging.DEBUG, "Error: {e!r}")
+    def turn_left(self):
+        self.drive_angle-=5
+        if self.drive_angle<-30:
+            self.drive_angle=-30  
+        self.px.set_dir_servo_angle(self.drive_angle)
+
 
     
+    ### ----------- Fancy Drive Controls ------------
+    @log_on_start(logging.DEBUG, "3pt turn left")
+    @log_on_error(logging.DEBUG, "Error: {e!r}")
+    def pt_turn_left(self):
+        self.drive_angle = -30
+        self.px.set_dir_servo_angle(self.drive_angle)
+        sleep(self.pause)
+        self.px.forward(self.speed)
+        sleep(1.25)
+        self.px.stop()
+        sleep(self.pause)
+        self.drive_angle = 0
+        self.px.set_dir_servo_angle(self.drive_angle)
+        sleep(self.pause)
+        self.px.forward(self.speed)
+        sleep(0.1)
+        self.px.stop()
+        sleep(self.pause)
+        self.drive_angle = 30
+        self.px.set_dir_servo_angle(self.drive_angle)
+        sleep(self.pause)
+        self.px.backward(self.speed)
+        sleep(1.6)
+        self.px.stop()
+        self.drive_angle = 0
+        self.px.set_dir_servo_angle(self.drive_angle)
+
     
+    @log_on_start(logging.DEBUG, "3pt turn right")
+    @log_on_error(logging.DEBUG, "Error: {e!r}")
+    def pt_turn_right(self):
+        self.drive_angle = 30
+        self.px.set_dir_servo_angle(self.drive_angle)
+        sleep(self.pause)
+        self.px.forward(self.speed)
+        sleep(1.25)
+        self.px.stop()
+        sleep(self.pause)
+        self.drive_angle = 0
+        self.px.set_dir_servo_angle(self.drive_angle)
+        sleep(self.pause)
+        self.px.forward(self.speed)
+        sleep(0.1)
+        self.px.stop()
+        sleep(self.pause)
+        self.drive_angle = -30
+        self.px.set_dir_servo_angle(self.drive_angle)
+        sleep(self.pause)
+        self.px.backward(self.speed)
+        sleep(1.6)
+        self.px.stop()
+        self.drive_angle = 0
+        self.px.set_dir_servo_angle(self.drive_angle)
+    
+    ### ----------- Head Controls ------------
     @log_on_start(logging.DEBUG, "Head up")
     @log_on_error(logging.DEBUG, "Error: {e!r}")
     def head_up(self):
@@ -94,7 +171,7 @@ class Moves():
             self.tilt_angle=-30
         self.px.set_cam_tilt_angle(self.tilt_angle)
         
-    @log_on_start(logging.DEBUG, "Head left")
+    @log_on_start(logging.DEBUG, "Head right")
     @log_on_error(logging.DEBUG, "Error: {e!r}")
     def head_right(self):
         self.pan_angle+=5
@@ -102,7 +179,7 @@ class Moves():
             self.pan_angle=30
         self.px.set_cam_pan_angle(self.pan_angle) 
     
-    @log_on_start(logging.DEBUG, "Head Right")
+    @log_on_start(logging.DEBUG, "Head left")
     @log_on_error(logging.DEBUG, "Error: {e!r}")
     def head_left(self):
         self.pan_angle-=5
@@ -136,6 +213,24 @@ if __name__ == "__main__":
                 case 'd':
                     c.front_right()
                     print(manual)
+                
+                case 'z':
+                    c.turn_left()
+                    print(manual)
+                case 'x':
+                    c.recenter_steering()
+                    print(manual)
+                case 'c':
+                    c.turn_right()
+                    print(manual)
+                
+                case 'r':
+                    c.pt_turn_left()
+                    print(manual)
+                case 'y':
+                    c.pt_turn_right()
+                    print(manual)
+                
                 case 'i':
                     c.head_up()
                     print(manual)
