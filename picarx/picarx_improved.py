@@ -292,9 +292,6 @@ class Picarx(object):
         self.sleep(2)
         self.stop()
 
-
-
-
         
     @log_on_start(logging.DEBUG, "Stop Robot")
     @log_on_error(logging.DEBUG, "Error stop robot: {e!r}")
