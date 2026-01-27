@@ -14,7 +14,7 @@ class GrayscaleMod():
 
     def __init__(self, sensitivity: int = None, polarity: bool = True):
         
-        self.sensor = LineSensor()
+        self.sensor = LineSensor('A0', 'A1', 'A2')
 
         self.bk_on_w = polarity  #black line on white floor true
         self.reference_diff = sensitivity
@@ -102,9 +102,9 @@ class GrayscaleMod():
         match read_var:
             case [True,0,0] if readings[1] > self.reference_value: # BonW WWW
                 if self.was_last_left:
-                    return -1.0
+                    return -1
                 else:
-                    return 1.0
+                    return 1
             case [True, 0, 0] if readings[1] < self.reference_value: # BonW BBB
                 return 0.0
             

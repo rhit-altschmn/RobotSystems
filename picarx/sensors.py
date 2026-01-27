@@ -21,7 +21,7 @@ class LineSensor(object):
     RIGHT = 2
     """Right Channel"""
 
-    def __init__(self, pin0: ADC, pin1: ADC, pin2: ADC, reference: int = None):
+    def __init__(self, pin0, pin1, pin2, reference: int = None):
         """
         Initialize Grayscale Module
 
@@ -34,7 +34,10 @@ class LineSensor(object):
         :param reference: reference voltage
         :type reference: 1*3 list, [int, int, int]
         """
-        self.pins = (pin0, pin1, pin2)
+        grayscale_pins = [pin0, pin1, pin2]
+        adc0, adc1, adc2 = [ADC(pin) for pin in grayscale_pins]
+
+        self.pins = (adc0, adc1, adc2)
         for i, pin in enumerate(self.pins):
             if not isinstance(pin, ADC):
                 raise TypeError(f"pin{i} must be robot_hat.ADC")
