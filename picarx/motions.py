@@ -11,6 +11,7 @@ try:
 except:
     on_robot = False
 
+
 manual = '''
 \n\nPress keys on keyboard to control PiCar-X!
     Main drive : wasd

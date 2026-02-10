@@ -1,0 +1,33 @@
+import cv2
+import numpy as np
+
+# 1. Load the image
+img = cv2.imread('image.jpg')
+if img is None:
+    print("Error: Image not found.")
+else:
+    # 2. Convert to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # 3. Apply Gaussian blur to reduce noise
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # 4. Perform Canny edge detection
+    # minVal and maxVal are the lower and upper thresholds for the hysteresis procedure
+    edges = cv2.Canny(blurred, 50, 150)
+
+    # 5. Get the coordinates of edge pixels
+    # np.argwhere returns a list of coordinates for non-zero pixels
+    # The result is in (row, column) format, which corresponds to (y, x)
+    edge_pixels = np.argwhere(edges > 0)
+
+    print(f"Found {len(edge_pixels)} edge pixels.")
+    # Example of accessing coordinates:
+    # for y, x in edge_pixels:
+    #     print(f"Edge pixel at x={x}, y={y}")
+
+    # Display the result (optional)
+    cv2.imshow("Original Image", img)
+    cv2.imshow("Canny Edges", edges)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()

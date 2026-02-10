@@ -51,7 +51,7 @@ class Picarx(object):
     # grayscale_pins: 3 adc channels
     # ultrasonic_pins: trig, echo2
     # config: path of config file
-    @log_on_start(logging.DEBUG, "Starting Picarx Init")
+    @log_on_start(logging.DEBUG, "Starting Picarx Init:")
     @log_on_error(logging.DEBUG, "Error init: {e!r}")
     @log_on_end(logging.DEBUG, "Finished picarx init")
     def __init__(self, 
@@ -67,6 +67,7 @@ class Picarx(object):
         time.sleep(0.2)
 
         # --------- config_flie ---------
+        print(f"\n on the robot: {on_the_robot}")
         if on_the_robot:
             self.config_flie = fileDB(config, 777, os.getlogin())
         else:
