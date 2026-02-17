@@ -53,23 +53,14 @@ def gen_frames():
         gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
 
         # --- ROI (EXACT SAME AS LINE FOLLOWER) ---
-        roi = gray[
-            ROI_Y_START : ROI_Y_START + ROI_HEIGHT,
-            :
-        ]
+        roi = gray[ROI_Y_START : ROI_Y_START + ROI_HEIGHT,: ]
 
         # --- threshold ---
         thresh_type = cv2.THRESH_BINARY_INV if INVERT else cv2.THRESH_BINARY
         _, binary = cv2.threshold(roi, THRESH_VAL, 255, thresh_type)
 
         # --- upscale for visibility ---
-        vis = cv2.resize(
-            binary,
-            None,
-            fx=2.0,
-            fy=2.0,
-            interpolation=cv2.INTER_NEAREST
-        )
+        vis = cv2.resize(binary,None,fx=2.0,fy=2.0,interpolation=cv2.INTER_NEAREST)
 
         ok, jpg = cv2.imencode(
             ".jpg",

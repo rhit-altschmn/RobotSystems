@@ -1,7 +1,5 @@
 from sensors import LineSensor
 
-
-
 class GrayscaleMod():
     LEFT = 0
     """Left Channel"""
