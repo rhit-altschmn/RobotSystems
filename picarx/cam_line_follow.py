@@ -128,7 +128,7 @@ class LineCam():
         print(f"sensor read: {readings}")
 
     
-        read_var = [self.bk_on_w,None,None] 
+        read_var = [True,None,None] 
 
         '''
         bl_on_w = true
@@ -221,15 +221,16 @@ class LineCam():
             mimetype="multipart/x-mixed-replace; boundary=frame"
         )
 
-    # ============================================================
-    # Main
-    # ============================================================
+# ============================================================
+# Main
+# ============================================================
+
 if __name__ == "__main__":
     cf = LineCam()
-    print("[MAIN] Threshold stream running on port 8080")
-    cf.app.run(host="0.0.0.0", port=8080, threaded=True)
     try:
         while True:
+            # print("[MAIN] Threshold stream running on port 8080")
+            cf.app.run(host="0.0.0.0", port=8080, threaded=True)
             cf.steer_car()
     except KeyboardInterrupt:
         cf.shut_down()
