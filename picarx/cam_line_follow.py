@@ -6,9 +6,11 @@ from time import sleep
 from picarx_improved import Picarx
 import numpy as np
 
-app = Flask(__name__)
+
 
 class LineCam():
+    app = Flask(__name__)
+
     FRAME_W, FRAME_H = 320, 240
 
     ROI_Y_START = 160
@@ -21,17 +23,18 @@ class LineCam():
 
     IM_CENTER = 320
 
-    
-
     WHITE_VAL = 2000
     BLACK_VAL = 100
 
+    REFERENCE_DEFAULT = 1000
+
     def __init__(self):
         print("[INIT] Initializing PiCar-X")
-        px = Picarx()
+        self.px = Picarx()
+        sleep(0.2)
 
         print("[INIT] Setting camera tilt to -35 deg")
-        px.set_cam_tilt_angle(-35)
+        self.px.set_cam_tilt_angle(-35)
         sleep(0.4)  # let servo settle
 
         # ============================================================
@@ -48,6 +51,8 @@ class LineCam():
         sleep(0.5)
 
         self.binary = None
+        self.reference_diff = self.REFERENCE_DEFAULT
+        self.max_turn = 35
         # self.line_sensor = [0,0,0]
 
 
@@ -89,6 +94,19 @@ class LineCam():
             )
 
     def img_process(self):
+        frame = self.picam2.capture_array()  # RGB888
+
+        # --- grayscale ---
+        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+
+        # --- ROI (EXACT SAME AS LINE FOLLOWER) ---
+        roi = gray[self.ROI_Y_START : self.ROI_Y_START + self.ROI_HEIGHT,: ]
+
+        # --- threshold ---
+        thresh_type = cv2.THRESH_BINARY_INV if self.INVERT else cv2.THRESH_BINARY
+        _, self.binary = cv2.threshold(roi, self.THRESH_VAL, 255, thresh_type)
+
+
         readings = [0,0,0]
         # 4. Perform Canny edge detection
         # minVal and maxVal are the lower and upper thresholds for the hysteresis procedure
@@ -189,16 +207,16 @@ class LineCam():
         robot_pos = self.img_process()
         turn_angle = self.max_turn * robot_pos
 
-        if turn_angle != self.turn_angle:
-            self.turn_angle = turn_angle
-            self.car.set_dir_servo_angle(int(turn_angle))
+        if turn_angle != self.px.dir_current_angle:
+            self.px.dir_current_angle = turn_angle
+            self.px.set_dir_servo_angle(int(turn_angle))
         
-        self.car.forward(10)
+        self.px.forward(40)
         sleep(0.005)
 
 
     def shut_down(self):
-        self.car.close()
+        self.px.reset()
         
 
 
@@ -230,7 +248,8 @@ if __name__ == "__main__":
     try:
         while True:
             # print("[MAIN] Threshold stream running on port 8080")
-            cf.app.run(host="0.0.0.0", port=8080, threaded=True)
+            # cf.gen_frames()
+            # cf.app.run(host="0.0.0.0", port=8080, threaded=True)
             cf.steer_car()
     except KeyboardInterrupt:
         cf.shut_down()

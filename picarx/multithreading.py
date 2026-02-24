@@ -2,32 +2,47 @@ import logging
 import time
 import cv2
 from picarx_improved import Picarx
-from vilib import Vilib
+# from vilib import Vilib
+from picamera2 import Picamera2, Preview
+
+
+
 
 logging.basicConfig(format="%(asctime)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
 logging.getLogger().setLevel(logging.DEBUG)
 
 
 class CameraSensing():
-    def __init__(self, camera_enabled=False):
+    def __init__(self, camera_enabled=True):
         self.robot = Picarx()
-        if camera_enabled:
-            self.robot.set_cam_tilt_angle(-30)
-            time.sleep(0.1)
-            Vilib.camera_start(vflip=False, hflip=False)
-            Vilib.display(local=True, web=True)
-            self.image_name = 'img'
-            self.image_path = "picarx"
-            time.sleep(0.5)
+        # if camera_enabled:
+        self.picam2 = Picamera2()
+        time.sleep(2)
+
+        camera_config = self.picam2.create_preview_configuration()
+        self.picam2.configure(camera_config)
+        # picam2.start_preview(Preview.QTL)
+        self.picam2.start()
+        time.sleep(2)
+        
+        self.robot.set_cam_tilt_angle(-35)
+        time.sleep(0.1)
+        # Vilib.camera_start(vflip=False, hflip=False)
+        # Vilib.display(local=True, web=True)
+        self.image_name = 'img'
+        self.image_path = "picarx"
+        time.sleep(0.5)
     
     def get_grayscale_data(self):
         return self.robot.get_grayscale_data()
 
     def capture_camera_image(self):
-        Vilib.take_photo(self.image_name, self.image_path)
+        # Vilib.take_photo(self.image_name, self.image_path)
+        self.picam2.capture_file("picarx/img.jpg")
     
     def shutdown_camera(self):
-        Vilib.camera_close()
+        pass
+        # Vilib.camera_close()
 
 
 class LineInterpretation():
@@ -116,5 +131,7 @@ if __name__ == "__main__":
     while True:
         camera_sensing.capture_camera_image()
         line_position = line_interpreter.line_position_from_camera(camera_sensing.image_path, camera_sensing.image_name)
-        logging.debug(f"Line position: {line_position}")
         car.follow_line(car=camera_sensing.robot, line_position=line_position)
+
+        if KeyboardInterrupt:
+            car.stop()
