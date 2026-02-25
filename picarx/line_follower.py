@@ -47,7 +47,7 @@ class LineFollower():
 
 
     def shut_down(self):
-        self.car.close()
+        self.car.stop()
         
 
 

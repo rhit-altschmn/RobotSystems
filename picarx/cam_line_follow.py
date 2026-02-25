@@ -53,6 +53,8 @@ class LineCam():
         self.binary = None
         self.reference_diff = self.REFERENCE_DEFAULT
         self.max_turn = 35
+        # self.max_turn = 30
+        self.turn_angle = 0
         # self.line_sensor = [0,0,0]
 
 
@@ -118,6 +120,10 @@ class LineCam():
         # np.argwhere returns a list of coordinates for non-zero pixels
         # The result is in (row, column) format, which corresponds to (y, x)
         edge_pixels = np.argwhere(edges > 0)
+
+        # if edge_pixels == None:
+        #     return None
+            
 
         # print(f"Found {len(edge_pixels)} edge pixels. \n {edge_pixels}")
         
@@ -205,18 +211,24 @@ class LineCam():
     
     def steer_car(self):
         robot_pos = self.img_process()
+        # if robot_pos == None:
+        #     self.px.stop()
+        #     # self.shut_down()
+        #     # break
+        # else:
         turn_angle = self.max_turn * robot_pos
 
-        if turn_angle != self.px.dir_current_angle:
-            self.px.dir_current_angle = turn_angle
+        if turn_angle != self.turn_angle:
+            self.turn_angle = turn_angle
             self.px.set_dir_servo_angle(int(turn_angle))
         
-        self.px.forward(40)
+        self.px.forward(10)
         sleep(0.005)
+            # self.px.stop()
 
 
     def shut_down(self):
-        self.px.reset()
+        self.px.stop()
         
 
 
@@ -251,6 +263,9 @@ if __name__ == "__main__":
             # cf.gen_frames()
             # cf.app.run(host="0.0.0.0", port=8080, threaded=True)
             cf.steer_car()
+            # time.sleep(0.1)
+    # except IndexError:
+        # cf.shut_down()
     except KeyboardInterrupt:
         cf.shut_down()
 
