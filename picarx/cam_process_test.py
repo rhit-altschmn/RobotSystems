@@ -20,7 +20,7 @@ BLACK_VAL = 100
 
 
 # 1. Load the image
-img = cv2.imread('picarx\linetest.jpg')
+img = cv2.imread('linetest.jpg')
 if img is None:
     print("Error: Image not found.")
 else:
@@ -49,7 +49,8 @@ else:
     # The result is in (row, column) format, which corresponds to (y, x)
     edge_pixels = np.argwhere(edges > 0)
 
-    # print(f"Found {len(edge_pixels)} edge pixels. \n {edge_pixels}")
+    
+    print(f"Found {len(edge_pixels)} edge pixels. \n {edge_pixels}")
     
     left_px = edge_pixels[0,1]
     right_px = edge_pixels[1,1]

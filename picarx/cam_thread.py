@@ -2,47 +2,32 @@ import logging
 import time
 import cv2
 from picarx_improved import Picarx
-# from vilib import Vilib
-from picamera2 import Picamera2, Preview
-
-
-
+from vilib import Vilib
 
 logging.basicConfig(format="%(asctime)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
 logging.getLogger().setLevel(logging.DEBUG)
 
 
 class CameraSensing():
-    def __init__(self, camera_enabled=True):
+    def __init__(self, camera_enabled=False):
         self.robot = Picarx()
-        # if camera_enabled:
-        self.picam2 = Picamera2()
-        time.sleep(2)
-
-        camera_config = self.picam2.create_preview_configuration()
-        self.picam2.configure(camera_config)
-        # picam2.start_preview(Preview.QTL)
-        self.picam2.start()
-        time.sleep(2)
-        
-        self.robot.set_cam_tilt_angle(-35)
-        time.sleep(0.1)
-        # Vilib.camera_start(vflip=False, hflip=False)
-        # Vilib.display(local=True, web=True)
-        self.image_name = 'img'
-        self.image_path = "picarx"
-        time.sleep(0.5)
+        if camera_enabled:
+            self.robot.set_cam_tilt_angle(-30)
+            time.sleep(0.1)
+            Vilib.camera_start(vflip=False, hflip=False)
+            Vilib.display(local=True, web=True)
+            self.image_name = 'img'
+            self.image_path = "picarx"
+            time.sleep(0.5)
     
     def get_grayscale_data(self):
         return self.robot.get_grayscale_data()
 
     def capture_camera_image(self):
-        # Vilib.take_photo(self.image_name, self.image_path)
-        self.picam2.capture_file("img.jpg")
+        Vilib.take_photo(self.image_name, self.image_path)
     
     def shutdown_camera(self):
-        pass
-        # Vilib.camera_close()
+        Vilib.camera_close()
 
 
 class LineInterpretation():
@@ -67,7 +52,7 @@ class LineInterpretation():
 
     def line_position_from_camera(self, image_path, image_name):
         """Uses OpenCV to process the camera image and determine the position of the line."""
-        camera_data = cv2.imread(f'{image_name}.jpg') #{image_path}/
+        camera_data = cv2.imread(f'{image_path}/{image_name}.jpg')
         _, width, _ = camera_data.shape
         grayscale = cv2.cvtColor(camera_data, cv2.COLOR_BGR2GRAY)
         
@@ -111,16 +96,16 @@ class Car():
     def follow_line(self, car, line_position):
         if -0.2 < line_position < 0.2:
             car.set_dir_servo_angle(0)
-            car.forward(20)
+            car.forward(10)
         else:
             car.set_dir_servo_angle(line_position * self.angle_scale)
-            car.forward(20)
+            car.forward(10)
     
     def stop_motors(self, car):
         car.stop()
 
     def stop(self, car):
-        car.stop()
+        car.reset()
     
 
 if __name__ == "__main__":
@@ -131,7 +116,5 @@ if __name__ == "__main__":
     while True:
         camera_sensing.capture_camera_image()
         line_position = line_interpreter.line_position_from_camera(camera_sensing.image_path, camera_sensing.image_name)
+        logging.debug(f"Line position: {line_position}")
         car.follow_line(car=camera_sensing.robot, line_position=line_position)
-
-        if KeyboardInterrupt:
-            car.stop()

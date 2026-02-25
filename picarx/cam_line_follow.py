@@ -35,6 +35,7 @@ class LineCam():
 
         print("[INIT] Setting camera tilt to -35 deg")
         self.px.set_cam_tilt_angle(-35)
+        # self.px.set_cam_pan_angle(-5)
         sleep(0.4)  # let servo settle
 
         # ============================================================
@@ -52,8 +53,11 @@ class LineCam():
 
         self.binary = None
         self.reference_diff = self.REFERENCE_DEFAULT
+        self.reference_value = self.REFERENCE_DEFAULT
         self.max_turn = 35
         # self.max_turn = 30
+        self.was_last_left = True
+
         self.turn_angle = 0
         # self.line_sensor = [0,0,0]
 
@@ -127,26 +131,30 @@ class LineCam():
 
         # print(f"Found {len(edge_pixels)} edge pixels. \n {edge_pixels}")
         
-        left_px = edge_pixels[0,1]
-        right_px = edge_pixels[1,1]
+        left_px = edge_pixels[10,0]
+        right_px = edge_pixels[11,1]
 
         left_off = self.IM_CENTER - left_px
         right_off = right_px -self.IM_CENTER
 
-        total_off = right_off - left_off
+        total_off = (right_off - left_off) / 2
 
 
         print(f"Left px: {left_px}   Right px: {right_px}   Left off: {left_off}  Right off: {right_off} Total offset: {total_off}")
 
-        if np.abs(total_off) <= 25: 
+        if np.abs(total_off) <= 25.0: 
             readings = [self.WHITE_VAL,self.BLACK_VAL,self.WHITE_VAL]
-        elif total_off < -80:
+        elif total_off < -80.0:
+            readings = [self.WHITE_VAL,self.WHITE_VAL,self.WHITE_VAL]
+        elif total_off > 80.0:
+            readings = [self.WHITE_VAL,self.WHITE_VAL,self.WHITE_VAL]
+        elif total_off < -50.0:
             readings = [self.BLACK_VAL,self.WHITE_VAL,self.WHITE_VAL]
-        elif total_off > 80:
+        elif total_off > 50.0:
             readings = [self.WHITE_VAL,self.WHITE_VAL,self.BLACK_VAL]
-        elif total_off < -25:
+        elif total_off < -25.0:
             readings = [self.BLACK_VAL,self.BLACK_VAL,self.WHITE_VAL]
-        elif total_off > 25:
+        elif total_off > 25.0:
             readings = [self.WHITE_VAL,self.BLACK_VAL,self.BLACK_VAL]
 
         print(f"sensor read: {readings}")
@@ -223,8 +231,8 @@ class LineCam():
             self.px.set_dir_servo_angle(int(turn_angle))
         
         self.px.forward(10)
-        sleep(0.005)
-            # self.px.stop()
+        sleep(0.01)
+        self.px.stop()
 
 
     def shut_down(self):
